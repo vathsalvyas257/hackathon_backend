@@ -1,6 +1,10 @@
 const OTP = require("../models/otpModel");
 const sendEmail = require("../utils/sendEmail");
 const{otpVerify}=require("../utils/verifyOtp")
+const User=require("../models/userModel");
+const bcrypt=require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const JWT_SECRET = process.env.JWT_SECRET;
 
 module.exports.sendOtp = async (req, res) => {
     try {
