@@ -81,7 +81,9 @@ router.get(
         name: req.user.name,
         email: req.user.email,
         googleId: req.user.id, // ✅ Add Google ID for uniqueness
-        role: "user"
+        role: "user",
+        image: profile.photos[0].value
+        
       });
       await user.save();
     }
