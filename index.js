@@ -1,0 +1,32 @@
+const express = require("express");
+const dotenv = require("dotenv");
+const cors = require("cors");
+const authRoutes = require("./routes/authRoutes");
+const connectDB=require("./config/dbConfig");
+dotenv.config();
+const app = express();
+
+app.use(express.json());
+app.use(cors());
+
+
+
+app.use("/api/auth", authRoutes);
+
+try {
+    connectDB().then(() => {
+      console.log("Database connection successful");
+      const PORT = process.env.PORT;
+      app.listen(PORT, () => {
+          console.log(`server is running at: http://localhost:${PORT}`);
+        })
+        
+    })
+    .catch((err) => {
+      console.log("Error:" + err.message);
+    });
+  } catch (err) {
+    console.log("Error:" + err.message);
+  }
+  
+
