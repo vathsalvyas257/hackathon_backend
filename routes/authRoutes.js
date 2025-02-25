@@ -67,34 +67,36 @@ router.post("/login", async (req, res) => {
 });
 
 // 📌 Google OAuth Route
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+router.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
-// 📌 Google OAuth Callback
+// 📌 Google OAuth Callback (Ensure Leading Slash `/auth/...`)
 router.get(
-    "/google/callback",
-    passport.authenticate("google", { session: false }),
-    async (req, res) => {
-      // Check if the user already exists
-      let user = await User.findOne({ email: req.user.email });
-  
-      // If user doesn't exist, create a new user
-      if (!user) {
-        const newUser = new User({
-          name: req.user.name,
-          email: req.user.email,
-          // other Google profile fields like picture can also be saved here
-          image: profile.photos[0].value,
-          role: 'user' // You can adjust this based on your logic
-        });
-        user = await newUser.save();  // Save new user to MongoDB
-      }
-  
-      // Generate JWT for the user
-      const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: "1h" });
-  
-      // Redirect user with the token
-      res.redirect(`http://localhost:3000?token=${token}`);
+  "/auth/google/callback", // ✅ Fixed (leading slash added)
+  passport.authenticate("google", { session: false }),
+  async (req, res) => {
+    let user = await User.findOne({ email: req.user.email });
+
+    if (!user) {
+      user = new User({
+        name: req.user.name,
+        email: req.user.email,
+        googleId: req.user.id, // ✅ Add Google ID for uniqueness
+        role: "user"
+      });
+      await user.save();
     }
-  );
-  
+
+    // Generate JWT
+    const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: "1h" });
+    res.cookie("token", token, {
+      httpOnly: true, // Prevents JavaScript access (XSS protection)
+      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      sameSite: "Strict", // Prevent CSRF attacks
+      maxAge: 60 * 60 * 1000, // 1-hour expiration
+    });
+    // Redirect user with token to frontend
+    res.redirect(`http://localhost:5173`);
+  }
+);
+
 module.exports = router;

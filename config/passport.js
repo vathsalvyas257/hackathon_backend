@@ -8,14 +8,18 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `http://localhost:${process.env.PORT||5000}/api/auth/google/callback`,
+      callbackURL: `http://localhost:7777/auth/google/callback`, // 🔥 FIXED URL (should be backend URL)
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
         let user = await User.findOne({ googleId: profile.id });
 
         if (!user) {
-          user = new User({ name: profile.displayName, email: profile.emails[0].value, googleId: profile.id });
+          user = new User({ 
+            name: profile.displayName, 
+            email: profile.emails[0].value, 
+            googleId: profile.id 
+          });
           await user.save();
         }
 
