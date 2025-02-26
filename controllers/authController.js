@@ -46,43 +46,69 @@ module.exports.verifyOtp = async (req, res) => {
     }
 };
 //after otp verification
+
+
+
 module.exports.apiAuthRegister = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
-        const file = req.file; // This may be undefined if no image is uploaded
-  
+        const { name, email, password, role } = req.body;
+        const file = req.file; // Image file (optional)
+
         // Validate input
         if (!name || !email || !password) {
             return res.status(400).json({ error: "All fields are required" });
         }
-  
-        // Check if the user already exists
-        const existingUser = await User.findOne({ email });
+
+        // Convert email to lowercase for consistency
+        const lowerCaseEmail = email.toLowerCase();
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email: lowerCaseEmail });
         if (existingUser) {
             return res.status(400).json({ error: "Email already registered" });
         }
-  
+
         // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-  
-        // Convert image to Base64 (if available)
-        const imageBase64 = file ? file.buffer.toString("base64") : null;
-  
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Handle image (store as URL instead of Base64)
+        let imageUrl = null;
+        if (file) {
+            imageUrl = file.buffer.toString("base64"); // Replace with cloud storage logic
+        }
+
+        // Set role (Only an admin can create admins)
+        let assignedRole = "student"; // Default role
+        if (role && ["admin", "faculty", "student", "alumni"].includes(role)) {
+            assignedRole = role;
+        }
+
         // Create new user
         const newUser = new User({
             name,
-            email,
+            email: lowerCaseEmail,
             password: hashedPassword,
-            image: imageBase64, // Store Base64 image or null if no image is provided
+            role: assignedRole, // Assign role
+            image: imageUrl, 
         });
-  
+
         await newUser.save();
-        res.status(201).json({ message: "User registered successfully" });
+
+        // Generate JWT Token
+        const token = jwt.sign({ id: newUser._id, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+        res.status(201).json({
+            message: "User registered successfully",
+            user: { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role, image: newUser.image },
+            token,
+        });
     } catch (error) {
-        console.error(error); // Log error for debugging
+        console.error("Registration Error:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
-  }
+};
+
 
 module.exports.login_post=async (req, res) => {
     const { email, password } = req.body;
@@ -94,6 +120,7 @@ module.exports.login_post=async (req, res) => {
     if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
   
     const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: "12h" });
+    res.cookie("token",token);
     res.json({ token, user: { name: user.name, email: user.email, role: user.role } });
   }
 
