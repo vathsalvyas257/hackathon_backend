@@ -15,4 +15,8 @@ router.get("/:id",scheduleController.get_scheduleByid);
 // POST a new schedule (Apply multer middleware)
 router.post("/", upload.single("pdfFile"), scheduleController.post_schedule);
 
+//delete schedule
+router.delete("/:id", scheduleController.delete_schedule);
+
+
 module.exports = router;

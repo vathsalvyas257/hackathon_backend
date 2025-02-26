@@ -84,3 +84,21 @@ module.exports.get_clubs = async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
+ //delete culb
+exports.delete_club = async (req, res) => {
+  try {
+      const { id } = req.params;
+
+      // Find the club by ID and delete it
+      const deletedClub = await Club.findByIdAndDelete(id);
+
+      if (!deletedClub) {
+          return res.status(404).json({ error: "Club not found" });
+      }
+
+      res.status(200).json({ message: "Club deleted successfully" });
+  } catch (error) {
+      console.error("Error deleting club:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+  }
+};

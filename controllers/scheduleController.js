@@ -85,3 +85,20 @@ module.exports.post_schedule = async (req, res) => {
     }
 };
 
+exports.delete_schedule = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Find and delete the schedule
+        const deletedSchedule = await Schedule.findByIdAndDelete(id);
+
+        if (!deletedSchedule) {
+            return res.status(404).json({ error: "Schedule not found" });
+        }
+
+        res.status(200).json({ message: "Schedule deleted successfully", schedule: deletedSchedule });
+    } catch (error) {
+        console.error("Error deleting schedule:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};

@@ -11,7 +11,8 @@ dotenv.config();
 const cookieParser = require("cookie-parser");
 const app = express();
 const alumniRoutes=require("./routes/alumniRoutes");
-const replyRoutes=require("./routes/replyRoutes")
+const replyRoutes=require("./routes/replyRoutes");
+const clubRoutes=require("./routes/clubRoutes")
 
 app.use(express.json());
 
@@ -29,8 +30,8 @@ app.use("/schedule",scheduleRoutes);
 app.use("/threads",threadRouter);
 app.use("/api/replies",replyRoutes );
 app.use("/alumni",alumniRoutes);
+app.use("/club",clubRoutes);
 
-app.use("/club",clobRoutes);
 try {
     connectDB().then(() => {
       console.log("Database connection successful");
