@@ -1,38 +1,43 @@
-const Club = require("../models/club");
+const Club = require("../models/clubModel");
 const multer = require("multer");
 const{sendCustomEmail}=require("../utils/emailUtil");
 const User=require("../models/userModel");
 
-// Configure Multer to store image in memory
+// Set up multer for file uploads
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-module.exports.upload = upload; // Export multer upload middleware
+exports.upload = upload;
 
-// POST: Add a new club
-module.exports.post_club = async (req, res) => {
-    try {
-        const { name, description, facultyCoordinator, studentCoordinator } = req.body;
-        
-        // Check if required fields are present
-        if (!name || !facultyCoordinator || !studentCoordinator || !req.file) {
-            return res.status(400).json({ error: "Required fields are missing" });
-        }
+// Get all clubs
+exports.get_clubs = async (req, res) => {
+  try {
+    const clubs = await Club.find();
+    res.status(200).json(clubs);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch clubs" });
+  }
+};
 
-        // Convert image to Base64
-        const logoBase64 = req.file.buffer.toString("base64");
+// Create a new club
+exports.post_club = async (req, res) => {
+  try {
+    const { name, description, facultyCoordinator, studentCoordinator } = req.body;
 
-        // Create a new club instance
-        const newClub = new Club({
-            name,
-            description,
-            logo: logoBase64, // Store Base64 image
-            facultyCoordinator,
-            studentCoordinator
-        });
+    if (!name || !facultyCoordinator || !studentCoordinator) {
+      return res.status(400).json({ message: "Please fill all required fields" });
+    }
 
-        // Save to database
-        await newClub.save();
+    const newClub = new Club({
+      name,
+      description,
+      facultyCoordinator,
+      studentCoordinator,
+      logo: req.file ? req.file.buffer.toString("base64") : null, // Store as Base64 (or use Cloudinary)
+    });
+
+    await newClub.save();
+    res.status(201).json({ message: "Club created successfully", club: newClub });
 
         // 📧 Fetch all users from the database
         const users = await User.find({}, "email"); // Retrieve only email fields
