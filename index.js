@@ -4,6 +4,7 @@ const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes=require("./routes/userRouter");
 const scheduleRoutes=require("./routes/scheduleRoutes");
+const clobRoutes=require("./routes/clubRoutes");
 const connectDB=require("./config/dbConfig");
 dotenv.config();
 const cookieParser = require("cookie-parser");
@@ -23,6 +24,7 @@ app.use(cookieParser());
 app.use("/", authRoutes);
 app.use("/",userRoutes);
 app.use("/schedule",scheduleRoutes);
+app.use("/club",clobRoutes);
 try {
     connectDB().then(() => {
       console.log("Database connection successful");
