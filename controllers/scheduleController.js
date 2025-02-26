@@ -20,26 +20,27 @@ module.exports.get_schedules = async (req, res) => {
 };
 // get single schedule
 
-module.exports.get_scheduleByid =async (req, res) => {
+module.exports.get_scheduleByid = async (req, res) => {
     try {
         const schedule = await Schedule.findById(req.params.id);
-        if (!schedule) {
-            return res.status(404).json({ error: "Schedule not found" });
+        if (!schedule || !schedule.pdfFile) {
+            return res.status(404).json({ error: "Schedule or PDF not found" });
         }
 
-        // Convert binary PDF data to base64
-        const base64Pdf = schedule.pdfFile.toString("base64");
-
-        res.json({
-            filename: schedule.filename,
-            description: schedule.description,
-            pdfData: base64Pdf,
+        // Set headers for the response
+        res.set({
+            "Content-Type": "application/pdf",
+            "Content-Disposition": `inline; filename="${schedule.filename}"`, // or "attachment;" for download
         });
+
+        // Send the PDF file as a binary stream
+        res.send(schedule.pdfFile);
     } catch (error) {
         console.error("❌ Fetch Error:", error);
         res.status(500).json({ error: "Failed to retrieve schedule" });
     }
 };
+
 
 
 // ✅ POST Schedule (Handled by Multer in Routes)
