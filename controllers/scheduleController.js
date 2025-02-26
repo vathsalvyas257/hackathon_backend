@@ -1,4 +1,6 @@
 const Schedule = require("../models/scheduleModel");
+const { sendCustomEmail } = require("../utils/emailUtil");
+const User=require("../models/userModel");
 
 // ✅ GET Schedules
 module.exports.get_schedules = async (req, res) => {
@@ -44,6 +46,7 @@ module.exports.get_scheduleByid = async (req, res) => {
 
 
 // ✅ POST Schedule (Handled by Multer in Routes)
+ // Ensure you have the correct model path
 module.exports.post_schedule = async (req, res) => {
     try {
         if (!req.file) {
@@ -58,9 +61,27 @@ module.exports.post_schedule = async (req, res) => {
         });
 
         await newSchedule.save();
-        res.json({ message: "Schedule uploaded successfully!" });
+
+        // Email notification logic
+        const users = await User.find({}, "email"); // Fetch only the email field
+        const emailList = users.map(user => user.email); // Replace with actual user emails from DB
+        const subject = "New Schedule Uploaded!";
+        const messageBody = `A new schedule "${req.file.originalname}" has been uploaded.\n\nDescription: ${req.body.description || "No description provided."}`;
+
+        // Send email to all users
+        for (const email of emailList) {
+            try {
+                await sendCustomEmail(email, subject, messageBody);
+                console.log(`📧 Email sent to ${email}`);
+            } catch (error) {
+                console.error(`❌ Failed to send email to ${email}:`, error.message);
+            }
+        }
+
+        res.json({ message: "Schedule uploaded successfully and emails sent!" });
     } catch (error) {
-        console.error("❌ Upload Error:", error);
+        console.error(" Upload Error:", error);
         res.status(500).json({ error: "Failed to upload schedule" });
     }
 };
+
