@@ -10,6 +10,7 @@ const threadRouter=require("./routes/threadRouter")
 dotenv.config();
 const cookieParser = require("cookie-parser");
 const app = express();
+const alumniRoutes=require("./routes/alumniRoutes");
 const replyRoutes=require("./routes/replyRoutes")
 
 app.use(express.json());
@@ -27,6 +28,7 @@ app.use("/",userRoutes);
 app.use("/schedule",scheduleRoutes);
 app.use("/threads",threadRouter);
 app.use("/api/replies",replyRoutes );
+app.use("/alumni",alumniRoutes);
 
 app.use("/club",clobRoutes);
 try {
