@@ -21,51 +21,50 @@ exports.get_clubs = async (req, res) => {
 
 // Create a new club
 exports.post_club = async (req, res) => {
-  try {
-    const { name, description, facultyCoordinator, studentCoordinator } = req.body;
-
-    if (!name || !facultyCoordinator || !studentCoordinator) {
-      return res.status(400).json({ message: "Please fill all required fields" });
-    }
-
-    const newClub = new Club({
-      name,
-      description,
-      facultyCoordinator,
-      studentCoordinator,
-      logo: req.file ? req.file.buffer.toString("base64") : null, // Store as Base64 (or use Cloudinary)
-    });
-
-    await newClub.save();
-    res.status(201).json({ message: "Club created successfully", club: newClub });
-
-        // 📧 Fetch all users from the database
-        const users = await User.find({}, "email"); // Retrieve only email fields
-        const emails = users.map(user => user.email); // Extract emails as an array
-
-        // Send email notification to all users
-        if (emails.length > 0) {
-            const subject = `New Club Created: ${name}`;
-            const text = `A new club "${name}" has been created. Faculty Coordinator: ${facultyCoordinator}. Student Coordinator: ${studentCoordinator}.`;
-            const html = `
-                <h2>New Club Created: ${name}</h2>
-                <p>${description}</p>
-                <p><strong>Faculty Coordinator:</strong> ${facultyCoordinator}</p>
-                <p><strong>Student Coordinator:</strong> ${studentCoordinator}</p>
-            `;
-
-            // Send emails asynchronously to all users
-            const emailPromises = emails.map(email => sendCustomEmail(email, subject, text, html));
-            await Promise.all(emailPromises);
-        }
-
-        res.status(201).json({ message: "Club added successfully and email sent!", club: newClub });
+    try {
+      const { name, description, facultyCoordinator, studentCoordinator } = req.body;
+  
+      if (!name || !facultyCoordinator || !studentCoordinator) {
+        return res.status(400).json({ message: "Please fill all required fields" });
+      }
+  
+      const newClub = new Club({
+        name,
+        description,
+        facultyCoordinator,
+        studentCoordinator,
+        logo: req.file ? req.file.buffer.toString("base64") : null, // Store as Base64 (or use Cloudinary)
+      });
+  
+      await newClub.save();
+  
+      // Fetch all users from the database
+      const users = await User.find({}, "email");
+      const emails = users.map(user => user.email);
+  
+      if (emails.length > 0) {
+        const subject = `New Club Created: ${name}`;
+        const text = `A new club "${name}" has been created. Faculty Coordinator: ${facultyCoordinator}. Student Coordinator: ${studentCoordinator}.`;
+        const html = `
+            <h2>New Club Created: ${name}</h2>
+            <p>${description}</p>
+            <p><strong>Faculty Coordinator:</strong> ${facultyCoordinator}</p>
+            <p><strong>Student Coordinator:</strong> ${studentCoordinator}</p>
+        `;
+  
+        // Send emails asynchronously
+        await Promise.all(emails.map(email => sendCustomEmail(email, subject, text, html)));
+      }
+  
+      // Send response after everything is completed
+      res.status(201).json({ message: "Club added successfully and email sent!", club: newClub });
+      
     } catch (error) {
-        console.error("Error adding club:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+      console.error("Error adding club:", error);
+      res.status(500).json({ error: "Internal Server Error" });
     }
-};
-;
+  };
+  
 
 
 // GET: Fetch all clubs
