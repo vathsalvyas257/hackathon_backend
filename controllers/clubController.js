@@ -37,7 +37,7 @@ exports.post_club = async (req, res) => {
     });
 
     await newClub.save();
-    res.status(201).json({ message: "Club created successfully", club: newClub });
+    // res.status(201).json({ message: "Club created successfully", club: newClub });
 
         // 📧 Fetch all users from the database
         const users = await User.find({}, "email"); // Retrieve only email fields
