@@ -27,6 +27,10 @@ router.get(
   passport.authenticate("google", { session: false }),
   authController.googleAuthCallback
 );
+router.post('/api/auth/logout', (req, res) => {
+  res.clearCookie('token', { httpOnly: true, sameSite: 'None', secure: true });
+  res.status(200).json({ message: 'Logout successful' });
+});
 
 router.post("/api/auth/sendOTP",authController.sendOtp);
 
