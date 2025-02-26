@@ -5,6 +5,7 @@ const User=require("../models/userModel");
 const bcrypt=require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET;
+const{userValidationSchema}=require("../Schema.js");
 
 module.exports.sendOtp = async (req, res) => {
     try {
@@ -65,63 +66,61 @@ module.exports.verifyOtp = async (req, res) => {
 
 module.exports.apiAuthRegister = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, role, googleId } = req.body;
         const file = req.file; // Image file (optional)
 
-        // Validate input
-        if (!name || !email || !password) {
-            return res.status(400).json({ error: "All fields are required" });
+        // ✅ Validate input using Joi
+        const { error, value } = userValidationSchema.validate(req.body, { abortEarly: false });
+
+        if (error) {
+            return res.status(400).json({ error: error.details.map((err) => err.message) });
         }
 
-        // Convert email to lowercase for consistency
-        const lowerCaseEmail = email.toLowerCase();
+        // ✅ Convert email to lowercase for consistency
+        const lowerCaseEmail = value.email.toLowerCase();
 
-        // Check if user already exists
+        // ✅ Check if user already exists
         const existingUser = await User.findOne({ email: lowerCaseEmail });
         if (existingUser) {
             return res.status(400).json({ error: "Email already registered" });
         }
 
-        // Hash password
+        // ✅ Hash password securely
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPassword = await bcrypt.hash(value.password, salt);
 
-        // Handle image (store as URL instead of Base64)
+        // ✅ Handle image properly (Use Cloud Storage Instead of Base64)
         let imageUrl = null;
         if (file) {
-            imageUrl = file.buffer.toString("base64"); // Replace with cloud storage logic
+            // Example: Upload to Cloudinary (Recommended)
+            // const uploadResponse = await cloudinary.uploader.upload(file.path);
+            // imageUrl = uploadResponse.secure_url;
+
+            imageUrl = file.buffer.toString("base64"); // TEMPORARY (Replace with cloud storage logic)
         }
 
-        // Set role (Only an admin can create admins)
-        let assignedRole = "student"; // Default role
-        if (role && ["admin", "faculty", "student", "alumni"].includes(role)) {
-            assignedRole = role;
-        }
-
-        // Create new user
+        // ✅ Create new user
         const newUser = new User({
-            name,
+            name: value.name,
             email: lowerCaseEmail,
             password: hashedPassword,
-            role: assignedRole, // Assign role
-            image: imageUrl, 
+            role: value.role, // Joi assigns default role if not provided
+            googleId: value.googleId || null,
+            image: imageUrl,
         });
 
         await newUser.save();
 
-        // Generate JWT Token
+        // ✅ Generate JWT Token
         const token = jwt.sign({ id: newUser._id, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
-        res.cookie("token",token,{
-            httpOnly: false,  // Allow frontend access
-            secure: true,     // Required for HTTPS
-            sameSite: "None", // Needed for cross-origin cookies
-            path: "/",
-        });
+
+        res.cookie("token", token);
         res.status(201).json({
             message: "User registered successfully",
             user: { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role, image: newUser.image },
             token,
         });
+
     } catch (error) {
         console.error("Registration Error:", error);
         res.status(500).json({ error: "Internal Server Error" });
