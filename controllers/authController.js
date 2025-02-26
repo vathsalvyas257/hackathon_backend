@@ -139,7 +139,7 @@ module.exports.login_post=async (req, res) => {
   
     const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: "12h" });
     res.cookie("token",token);
-    res.json({ token, user: { name: user.name, email: user.email, role: user.role } });
+    res.json({ token, user: { name: user.name, email: user.email, role: user.role,image:user.image } });
   }
 
 module.exports.googleAuthCallback=async (req, res) => {
