@@ -111,7 +111,12 @@ module.exports.apiAuthRegister = async (req, res) => {
 
         // Generate JWT Token
         const token = jwt.sign({ id: newUser._id, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
-        res.cookie("token",token);
+        res.cookie("token",token,{
+            httpOnly: false,  // Allow frontend access
+            secure: true,     // Required for HTTPS
+            sameSite: "None", // Needed for cross-origin cookies
+            path: "/",
+        });
         res.status(201).json({
             message: "User registered successfully",
             user: { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role, image: newUser.image },
@@ -155,7 +160,7 @@ module.exports.googleAuthCallback=async (req, res) => {
     // Generate JWT
     const token = jwt.sign({name:user.name,email:user.email,image:user.image, userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: "1h" });
     res.cookie("token", token, {
-      httpOnly: true, // Prevents JavaScript access (XSS protection)
+      httpOnly: false, // Prevents JavaScript access (XSS protection)
       secure: process.env.NODE_ENV === "production", // Use secure cookies in production
       sameSite: "Strict", // Prevent CSRF attacks
       maxAge: 60 * 60 * 1000, // 1-hour expiration
