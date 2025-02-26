@@ -165,4 +165,11 @@ module.exports.googleAuthCallback=async (req, res) => {
   }
 
 
+  module.exports.logout=(req, res) => {
+    // Remove cookies
+    console.log("logout")
+    res.clearCookie('token');
   
+    // Send a response indicating successful logout
+    res.status(200).json({ message: 'Logged out successfully' });
+  }

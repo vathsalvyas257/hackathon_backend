@@ -31,4 +31,9 @@ router.get(
 router.post("/api/auth/sendOTP",authController.sendOtp);
 
 router.post("/api/auth/verifyOTP",authController.verifyOtp);
+
+
+// Logout API - Remove cookies (JWT)
+router.post('/api/auth/logout', authController.logout);
+
 module.exports = router;
