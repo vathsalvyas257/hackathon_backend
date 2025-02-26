@@ -8,21 +8,34 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 module.exports.sendOtp = async (req, res) => {
     try {
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const { email } = req.body;
+        const { email } = req.body; // Get email from request body
 
+        // Validate email
         if (!email) {
             return res.status(400).json({ error: "Email is required" });
         }
-        await OTP.create({ email, otp }); // Save OTP in DB
 
-        const emailSent = await sendEmail(email, otp); // Send OTP via email
-        if (!emailSent) {
-            return res.status(500).json({ error: "Failed to send OTP" });
-        }
+        // Generate 6-digit OTP
+        const otp = sendEmail.generateOTP(); 
 
-        res.status(200).json({ message: "OTP sent successfully" });
+        // Save OTP in database with expiration time (5 minutes)
+        
+
+
+        // Send OTP via email
+        await sendEmail.sendOTPEmail(email, otp);
+        const newOtp = new OTP({
+            email,
+            otp,
+            expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes from now
+        });
+        await newOtp.save();
+
+
+        res.status(200).json({ msg: "OTP sent successfully" });
+
     } catch (error) {
+        console.error("OTP Error:", error);
         res.status(500).json({ error: "Error sending OTP" });
     }
 };
@@ -31,12 +44,13 @@ module.exports.sendOtp = async (req, res) => {
 module.exports.verifyOtp = async (req, res) => {
     try {
         const { email, otp } = req.body;
-
+        console.log("otp details:",otp,email);
         if (!email || !otp) {
             return res.status(400).json({ error: "Email and OTP are required" });
         }
 
         const isValid = await otpVerify(email, otp);
+        console.log(isValid);
         if (!isValid) {
             return res.status(400).json({ error: "Invalid or expired OTP" });
         }
@@ -45,7 +59,7 @@ module.exports.verifyOtp = async (req, res) => {
         res.status(500).json({ error: "Error verifying OTP" });
     }
 };
-//after otp verification
+
 
 
 
@@ -97,7 +111,7 @@ module.exports.apiAuthRegister = async (req, res) => {
 
         // Generate JWT Token
         const token = jwt.sign({ id: newUser._id, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
-
+        res.cookie("token",token);
         res.status(201).json({
             message: "User registered successfully",
             user: { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role, image: newUser.image },

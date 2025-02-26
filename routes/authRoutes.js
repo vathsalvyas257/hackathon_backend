@@ -28,4 +28,7 @@ router.get(
   authController.googleAuthCallback
 );
 
+router.post("/api/auth/sendOTP",authController.sendOtp);
+
+router.post("/api/auth/verifyOTP",authController.verifyOtp);
 module.exports = router;
