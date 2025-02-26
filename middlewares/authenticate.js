@@ -3,7 +3,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 // Middleware to verify token
 const authenticate = (req, res, next) => {
-  const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+  const token = req.cookies.token || req.cookies.auth_token;
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized: No token provided" });
