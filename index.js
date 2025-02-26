@@ -3,10 +3,12 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes=require("./routes/userRouter");
+const scheduleRoutes=require("./routes/scheduleRoutes");
 const connectDB=require("./config/dbConfig");
 dotenv.config();
 const cookieParser = require("cookie-parser");
 const app = express();
+
 
 app.use(express.json());
 
@@ -19,7 +21,8 @@ app.use(cookieParser());
 
 
 app.use("/", authRoutes);
-app.use("/",userRoutes)
+app.use("/",userRoutes);
+app.use("/schedule",scheduleRoutes);
 try {
     connectDB().then(() => {
       console.log("Database connection successful");
