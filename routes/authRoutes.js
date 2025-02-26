@@ -6,7 +6,7 @@ require("../config/passport");
 const User = require("../models/userModel");
 const multer = require("multer");
 const authController=require("../controllers/authController");
-
+const authenticate=require("../middlewares/authenticate");
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
 
@@ -40,4 +40,5 @@ router.post("/api/auth/verifyOTP",authController.verifyOtp);
 // Logout API - Remove cookies (JWT)
 router.post('/api/auth/logout', authController.logout);
 
+router.get("/api/user", authenticate, authController.fetchUser);
 module.exports = router;

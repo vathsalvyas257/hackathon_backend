@@ -139,7 +139,7 @@ module.exports.login_post=async (req, res) => {
   
     const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: "12h" });
     res.cookie("token",token);
-    res.json({ token, user: { name: user.name, email: user.email, role: user.role } });
+    res.json({ token, user: { name: user.name, email: user.email, role: user.role,image:user.image } });
   }
 
 module.exports.googleAuthCallback=async (req, res) => {
@@ -177,3 +177,17 @@ module.exports.googleAuthCallback=async (req, res) => {
     // Send a response indicating successful logout
     res.status(200).json({ message: 'Logged out successfully' });
   }
+
+
+module.exports.fetchUser=async (req, res) => {
+      try {
+          const user = await User.findById(req.user.id).select("-password"); // Exclude password
+          if (!user) {
+              return res.status(404).json({ message: "User not found" });
+          }
+          res.json(user);
+      } catch (error) {
+          console.error("Error fetching user:", error);
+          res.status(500).json({ message: "Server error" });
+      }
+    }
