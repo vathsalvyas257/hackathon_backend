@@ -28,7 +28,7 @@ router.get(
   authController.googleAuthCallback
 );
 router.post('/api/auth/logout', (req, res) => {
-  res.clearCookie('token', { httpOnly: true, sameSite: 'None', secure: true });
+  res.clearCookie('token');
   res.status(200).json({ message: 'Logout successful' });
 });
 
