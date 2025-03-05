@@ -158,10 +158,7 @@ module.exports.googleAuthCallback=async (req, res) => {
     }
     // Generate JWT
     const token = jwt.sign({name:user.name,email:user.email,image:user.image, userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: "1h" });
-    res.cookie("token", token, {
-      httpOnly: false, // Prevents JavaScript access (XSS protection)
-      maxAge: 60 * 60 * 1000, // 1-hour expiration
-    });
+    res.cookie("token", token);
     // Redirect user with token to frontend
 
         res.redirect(`https://hackathon-frontend-nine-xi.vercel.app/auth-success?token=${token}`)
