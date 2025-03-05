@@ -17,7 +17,7 @@ const clubRoutes=require("./routes/clubRoutes")
 app.use(express.json());
 
 app.use(cors({
-  origin:["http://localhost:5173","https://hackathon-frontend-nine-xi.vercel.app/"], // React frontend URL
+  origin:"https://hackathon-frontend-nine-xi.vercel.app", // React frontend URL
   credentials: true, // Allow cookies & authentication headers
 }));
 
